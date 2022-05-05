@@ -1,4 +1,4 @@
-from checkspecs import get_path
+from checkspecs import submit_checker
 
 import time
 from watchdog.observers import Observer
@@ -6,7 +6,7 @@ from watchdog.events import FileSystemEventHandler
 import logging
 logging.basicConfig(level=logging.INFO, format=' %(asctime)s -  %(levelname) s -  %(message)s')
 
-WATCH_DIR = '/path/to/WATCH_directory/'
+WATCH_DIR = './Submit/'
 
 class Watcher:
     
@@ -35,15 +35,13 @@ class Handler(FileSystemEventHandler):
         if event.is_directory:
             return None
         elif event.event_type == 'created':
-            # Take action when a file is first created
             time.sleep(2)
             logging.info(f'Recieved new file - {event.src_path}')
-            get_path(str(event.src_path))
+            submit_checker(str(event.src_path))
         elif event.event_type == 'moved':
-            # Take action when a file is moved
             time.sleep(2)
             logging.info(f'Received move event - {event.src_path} to {event.dest_path}')
-            get_path(str(event.dest_path))
+            submit_checker(str(event.dest_path))
         elif event.event_type == 'modified':
             logging.debug('Received modified event')
             return None
