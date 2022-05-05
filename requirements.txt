@@ -1,0 +1,4 @@
+watchdog
+pymediainfo
+
+MediaInfo-CLI
