@@ -18,7 +18,7 @@ class App:
 
     def __init__(self, path):
         self.path = path
-        self.media_item = MediaItem(self.path)
+        self.media_item = MediaItem(self.path, track_width=None, track_height=None)
 
     def process_file(self):
         mp4 = self.media_item.create_new_media_object()
@@ -29,10 +29,10 @@ class App:
 
 class MediaItem:
 
-    def __init__(self, path):
+    def __init__(self, path, track_width, track_height):
         self.path = path
-        self.track_width = None
-        self.track_height = None
+        self.track_width = track_width
+        self.track_height = track_height
 
     def create_new_media_object(self):
         media_info = MediaInfo.parse(self.path)
