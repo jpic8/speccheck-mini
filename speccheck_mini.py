@@ -6,26 +6,32 @@ import time
 import logging
 logging.basicConfig(level=logging.NOTSET, format=' %(asctime)s -  %(levelname) s -  %(message)s')
 
-"""watches folder with Python Watchdog module for new files, 
+"""
+watches folder with Python Watchdog module for new files, 
 inspects mp4 with MediaInfo for 1920x1080 sizing, 
-then moves to PASS/FAIL folder based on that info"""
+then moves to PASS/FAIL folder based on that info
+"""
 
+# watch folders
 WATCH_DIR = './Submit/'
 PASS_DIR = './PASS/'
 FAIL_DIR = './FAIL/'
+
+# acceptable frame resolutions
+frame_width_pass = [1280, 1600, 1920, 2560, 3840, 4096, 5120, 7680]
+frame_height_pass = [720, 900, 1080, 1440, 1800, 2160, 2880, 4320]
 
 class App:
 
     def __init__(self, path):
         self.path = path
-        self.media_item = MediaItem(self.path, track_width=None, track_height=None)
+        self.media_item = MediaItem(self.path, track_width=None, track_height=None).create_new_media_object()
 
     def process_file(self):
-        mp4 = self.media_item.create_new_media_object()
-        if mp4.is_valid_resolution():
-            mp4.move_to_pass()
+        if self.media_item.is_valid_resolution():
+            self.media_item.move_to_pass()
         else:
-            mp4.move_to_fail()
+            self.media_item.move_to_fail()
 
 class MediaItem:
 
@@ -44,11 +50,11 @@ class MediaItem:
 
     def is_valid_resolution(self):
         logging.info(f"{self.track_width}x{self.track_height}")
-        if self.track_width == 1920 and self.track_height == 1080:
-            logging.info('1920x1080 detected, moving to PASS folder')
+        if self.track_width in frame_width_pass and self.track_height in frame_height_pass:
+            logging.info('HD 16:9 material detected, moving to PASS folder')
             return True
         else:
-            logging.info('video is NOT 1920x1080, moving to FAIL folder')
+            logging.info('video is NOT HD 16:9, moving to FAIL folder')
             return False
 
     def move_to_pass(self):
@@ -98,16 +104,19 @@ class Handler(FileSystemEventHandler):
             logging.info(f'Received move event - {event.src_path} to {event.dest_path}')
             check_for_submit_folder(str(event.dest_path))
         elif event.event_type == 'modified':
-            logging.debug('Received modified event')
+            #logging.debug('Received modified event')
             return None
 
 def check_for_submit_folder(path):
     p = Path(path)
-    substring = ('/Submit')
-    if substring in (str(p)) and p.suffix == '.mp4':
-        logging.info('Received new file - PROCESSING')
-        a = App(path)
-        a.process_file()
+    if p.parts[-2] == 'Submit' and p.suffix == '.mp4':
+        try:
+            logging.info('Received new file - PROCESSING')
+            a = App(path)
+            a.process_file()
+        except FileNotFoundError:
+            logging.info('file already processed')
+            return None
     else:
         logging.info('Received new file NOT in Submit folder - IGNORE')
         return None
@@ -115,9 +124,13 @@ def check_for_submit_folder(path):
 def check_directory_for_files(path):
     p = Path(path)
     for file in list(p.glob('*.mp4')):
-        logging.info('Received new file from folder action - PROCESSING')
-        a = App(file)
-        a.process_file()
+        try:
+            logging.info('Received new file from folder action - PROCESSING')
+            a = App(file)
+            a.process_file()
+        except FileNotFoundError:
+            logging.info('file already processed')
+            return None
 
 if __name__ == '__main__':
     w = Watcher()
