@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.NOTSET, format=' %(asctime)s -  %(levelname) s
 
 """
 watches folder with Python Watchdog module for new files, 
-inspects mp4 with MediaInfo for 1920x1080 sizing, 
+inspects mp4 with MediaInfo for approved 16:9 HD sizing, 
 then moves to PASS/FAIL folder based on that info
 """
 
